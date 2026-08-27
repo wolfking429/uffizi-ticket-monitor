@@ -1,0 +1,2 @@
+"""Ticket availability monitor."""
+
