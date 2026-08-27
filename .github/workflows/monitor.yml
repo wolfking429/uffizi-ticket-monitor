@@ -1,0 +1,67 @@
+name: Ticket monitor
+
+on:
+  schedule:
+    - cron: "3,13,23,33,43,53 * * * *"
+  workflow_dispatch:
+    inputs:
+      test_notification:
+        description: "Send labelled test messages without checking inventory"
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ticket-monitor
+  cancel-in-progress: true
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      EVENT_URL: ${{ secrets.EVENT_URL }}
+      TARGET_DATE: ${{ secrets.TARGET_DATE }}
+      TARGET_TIMES: ${{ secrets.TARGET_TIMES }}
+      MIN_TICKETS: ${{ secrets.MIN_TICKETS }}
+      PUSHPLUS_TOKEN: ${{ secrets.PUSHPLUS_TOKEN }}
+      SMTP_USER: ${{ secrets.SMTP_USER }}
+      SMTP_AUTH_CODE: ${{ secrets.SMTP_AUTH_CODE }}
+      ALERT_EMAIL: ${{ secrets.ALERT_EMAIL }}
+      PYTHONUNBUFFERED: "1"
+    steps:
+      - name: Check out monitor
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install monitor
+        run: pip install .
+
+      - name: Install browser
+        run: python -m playwright install --with-deps chromium
+
+      - name: Send test notification
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.test_notification }}
+        run: python -m uffizi_monitor.main --test-notification
+
+      - name: Check ticket availability
+        if: ${{ github.event_name != 'workflow_dispatch' || !inputs.test_notification }}
+        run: python -m uffizi_monitor.main
+
+      - name: Preserve diagnostic screenshot on failure
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: diagnostic-screenshot
+          path: failure.png
+          if-no-files-found: ignore
+          retention-days: 3
+
