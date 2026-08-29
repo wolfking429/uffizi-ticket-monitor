@@ -12,6 +12,22 @@ from .availability import Slot
 
 PUSHPLUS_ENDPOINT = "https://www.pushplus.plus/send"
 
+SMTP_HOSTS = {
+    "163.com": "smtp.163.com",
+    "sina.com": "smtp.sina.com",
+    "sina.cn": "smtp.sina.cn",
+    "vip.sina.com": "smtp.vip.sina.com",
+    "vip.sina.cn": "smtp.vip.sina.cn",
+}
+
+
+def smtp_host_for_user(smtp_user: str) -> str:
+    domain = smtp_user.rsplit("@", 1)[-1].casefold()
+    try:
+        return SMTP_HOSTS[domain]
+    except KeyError as exc:
+        raise ValueError(f"Unsupported SMTP email domain: {domain}") from exc
+
 
 @dataclass(frozen=True)
 class Alert:
@@ -83,7 +99,6 @@ def send_email(
     message.set_content(alert.body)
 
     factory = smtp_factory or smtplib.SMTP_SSL
-    with factory("smtp.163.com", 465, timeout=20) as smtp:
+    with factory(smtp_host_for_user(smtp_user), 465, timeout=20) as smtp:
         smtp.login(smtp_user, smtp_auth_code)
         smtp.send_message(message)
-
