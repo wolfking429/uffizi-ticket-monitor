@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 
 from uffizi_monitor.availability import Slot
-from uffizi_monitor.notifiers import Alert, send_email, send_pushplus
+from uffizi_monitor.notifiers import Alert, send_email, send_pushplus, smtp_host_for_user
 
 
 class FakeResponse:
@@ -86,6 +86,31 @@ def test_email_logs_in_with_auth_code_and_sends_utf8_message() -> None:
     assert smtp.message["To"] == "receiver@example.com"
     assert "08:30" in smtp.message.get_content()
     assert "smtp-auth-code" not in smtp.message.as_string()
+
+
+def test_sina_email_uses_sina_ssl_server() -> None:
+    created: list[FakeSmtp] = []
+
+    def factory(host: str, port: int, timeout: int) -> FakeSmtp:
+        smtp = FakeSmtp(host, port, timeout)
+        created.append(smtp)
+        return smtp
+
+    send_email(
+        sample_alert(),
+        smtp_user="sender@sina.com",
+        smtp_auth_code="smtp-auth-code",
+        recipient="receiver@example.com",
+        smtp_factory=factory,
+    )
+
+    assert created[0].connection == ("smtp.sina.com", 465, 20)
+
+
+def test_supported_sina_domains_map_to_official_servers() -> None:
+    assert smtp_host_for_user("sender@sina.cn") == "smtp.sina.cn"
+    assert smtp_host_for_user("sender@vip.sina.com") == "smtp.vip.sina.com"
+    assert smtp_host_for_user("sender@vip.sina.cn") == "smtp.vip.sina.cn"
 
 
 def test_test_notification_is_clearly_labelled() -> None:
