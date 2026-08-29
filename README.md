@@ -19,9 +19,11 @@
 | `TARGET_TIMES` | 目标时段，以英文逗号分隔，例如 `08:15,08:30` |
 | `MIN_TICKETS` | 每个时段所需的最低余票数 |
 | `PUSHPLUS_TOKEN` | 重新生成的 PushPlus token |
-| `SMTP_USER` | 已开启 SMTP 的发件邮箱 |
+| `SMTP_USER` | 已开启 SMTP 的发件邮箱；支持 163 邮箱和新浪邮箱 |
 | `SMTP_AUTH_CODE` | 邮箱后台生成的 SMTP 授权码 |
 | `ALERT_EMAIL` | 接收提醒的邮箱 |
+
+新浪邮箱会按邮箱后缀自动选择官方 SSL 服务器：`@sina.com` 使用 `smtp.sina.com:465`，`@sina.cn`、`@vip.sina.com` 和 `@vip.sina.cn` 也会自动匹配相应服务器。请先在新浪邮箱设置中开启 POP3/SMTP 或 IMAP/SMTP 服务，并使用客户端授权码。
 
 ## 启用与测试
 
@@ -47,5 +49,3 @@ python -m pip install -e ".[test]"
 python -m playwright install chromium
 python -m pytest -q
 ```
-
-
