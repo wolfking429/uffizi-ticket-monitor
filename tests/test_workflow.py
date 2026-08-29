@@ -45,3 +45,4 @@ def test_readme_warns_to_rotate_exposed_credentials() -> None:
     assert "SMTP 授权码" in readme
     assert "登录密码" in readme
     assert "SiteBlockedError" in readme
+    assert "新浪邮箱" in readme
