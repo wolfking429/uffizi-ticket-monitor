@@ -1,8 +1,6 @@
-name: Ticket monitor
+name: Ticket monitor (paused)
 
 on:
-  schedule:
-    - cron: "3,13,23,33,43,53 * * * *"
   workflow_dispatch:
     inputs:
       test_notification:
@@ -64,4 +62,3 @@ jobs:
           path: failure.png
           if-no-files-found: ignore
           retention-days: 3
-
